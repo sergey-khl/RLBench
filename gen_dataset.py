@@ -2,8 +2,8 @@ import gymnasium as gym
 from gymnasium.utils.performance import benchmark_step
 import numpy as np
 from numpy._core.numeric import dtype
+from examples.keyboard_observer import KeyboardObserver
 import rlbench
-from keyboard_observer import KeyboardObserver
 
 # env = gym.make('rlbench/reach_target-vision-v0', render_mode="rgb_array")
 env = gym.make('rlbench/reach_target-vision-v0', render_mode="human")
