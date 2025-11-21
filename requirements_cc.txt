@@ -1,0 +1,18 @@
+cffi==1.17.1+computecanada
+pyzmq-26.2.1+computecanada
+cloudpickle==3.1.2+computecanada
+Farama_Notifications==0.0.4+computecanada
+gymnasium==1.2.2
+loguru==0.7.3+computecanada
+natsort==8.4.0
+numpy==2.3.3+computecanada
+pillow==11.1.0+computecanada
+psutil==7.0.0+computecanada
+pybind11==3.0.1
+pycparser==2.23+computecanada
+pylocker==3.1.0
+pyquaternion==0.9.9
+PyRep @ git+https://github.com/stepjam/PyRep.git@8f420be8064b1970aae18a9cfbc978dfb15747ef
+rlbench==1.2.0
+scipy==1.16.2+computecanada
+typing_extensions==4.15.0+computecanada
