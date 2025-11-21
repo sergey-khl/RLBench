@@ -2,15 +2,11 @@ import zmq
 import gymnasium as gym
 import numpy as np
 import rlbench
-from gymnasium.utils.performance import benchmark_step
-from pyrep.const import PrimitiveShape
-from pyrep.objects.shape import Shape
-from rlbench.tasks import ReachTarget, PickAndLift, pick_up_cup
-from rlbench.action_modes.action_mode import MoveArmThenGripper
-from rlbench.action_modes.arm_action_modes import JointVelocity
-from rlbench.action_modes.gripper_action_modes import Discrete
+from rlbench.action_modes.action_mode import EndEffectorActionMode
 from rlbench.environment import Environment
 from rlbench.observation_config import ObservationConfig
+from rlbench.tasks.reach_target import ReachTarget
+from pyquaternion import Quaternion
 
 def run_server():
     context = zmq.Context()
@@ -22,8 +18,7 @@ def run_server():
     obs_config = ObservationConfig()
     obs_config.set_all(True)
 
-    action_mode = MoveArmThenGripper(
-        arm_action_mode=JointVelocity(), gripper_action_mode=Discrete())
+    action_mode = EndEffectorActionMode()
     env = Environment(
         action_mode, '', obs_config, False)
     env.launch()
@@ -31,6 +26,9 @@ def run_server():
     task = env.get_task(ReachTarget)
 
     socket.setsockopt(zmq.RCVTIMEO, 100)
+
+
+    curr_obs_data = None
 
     stats = {
             'episode': {
@@ -50,11 +48,11 @@ def run_server():
             cmd = message['cmd']
 
             if cmd == 'reset':
-                obs = task.reset()[0]
+                obs = task.reset()[1]
 
-                target_pos = obs['task_low_dim_state']
+                target_pos = obs.task_low_dim_state
 
-                curr_obs_data = np.concatenate([obs['joint_positions'], target_pos])
+                curr_obs_data = np.concatenate([obs.gripper_pose, target_pos])
 
                 stats = {
                         'episode': {
@@ -67,29 +65,37 @@ def run_server():
                 
             elif cmd == 'step':
                 action = message['action']
-                obs, reward, terminated, truncated, info = task.step(action)
 
-                target_pos = obs['task_low_dim_state']
+                # normalize the quaternion
+                action[3:7] /= np.linalg.norm(action[3:7])
+                try:
+                    obs, reward, terminated = task.step(action)
 
-                curr_obs_data = np.concatenate([obs['joint_positions'], target_pos])
+                    target_pos = obs.task_low_dim_state
 
-                gripper_pos = obs['gripper_pose'][:3]
-                distance = np.linalg.norm(target_pos - gripper_pos)
+                    curr_obs_data = np.concatenate([obs.gripper_pose, target_pos])
+                except:
+                    # stay in place cus out of bounds or some other problem
+                    terminated = False
+
+                distance = np.linalg.norm(curr_obs_data[7:] - curr_obs_data[:3])
                 reward = -distance
+                    
                 stats['episode']['return'] = reward
                 stats['episode']['length'] += 1
                 print(stats)
 
-                socket.send_pyobj((curr_obs_data, reward, terminated, truncated, stats))
+                socket.send_pyobj((curr_obs_data, reward, terminated, stats))
                 
             elif cmd == 'close':
-                env.close()
+                env.shutdown()
                 socket.send_pyobj("Closed")
                 break
 
             elif cmd == 'set_space':
+                action_low, action_high = action_mode.action_bounds()
+                action_shape = action_mode.action_shape(task._scene)
                 obs_shape = np.array([10])
-                act_shape = np.array([8])
                 socket.send_pyobj({
                     "observation_space": {
                         'low': np.full(obs_shape, -np.inf, dtype=np.float32),
@@ -97,9 +103,9 @@ def run_server():
                         'shape': np.array(obs_shape, dtype=np.int32),
                     },
                     "action_space": {
-                        'low': np.array([-0.1, -0.1, -0.1, -0.1, -0.1, -0.1, -0.1,  0], dtype=np.float32),
-                        'high': np.array([0.1,  0.1,  0.1,  0.1,  0.1,  0.1,  0.1,  0.04], dtype=np.float32),
-                        'shape': np.array(act_shape, dtype=np.int32),
+                        'low': np.array(action_low, dtype=np.float32),
+                        'high': np.array(action_high, dtype=np.float32),
+                        'shape': np.array(np.array([action_shape]), dtype=np.int32),
                     }
                 })
 
@@ -109,7 +115,7 @@ def run_server():
     finally:
         # CHANGE 3: Graceful cleanup prevents the QMutex/QObject errors
         print("Cleaning up environment...")
-        env.close()
+        env.shutdown()
         socket.close()
         context.term()
 

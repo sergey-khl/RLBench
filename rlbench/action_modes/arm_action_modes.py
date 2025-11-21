@@ -312,12 +312,23 @@ class EndEffectorPoseViaIK(ArmActionMode):
         self._frame = frame
         self._collision_checking = collision_checking
 
+    def _quick_boundary_check(self, scene: Scene, action: np.ndarray):
+        pos_to_check = action[:3]
+        relative_to = None if self._frame == RelativeFrame.WORLD else scene.robot.arm.get_tip()
+        if relative_to is not None:
+            scene.target_workspace_check.set_position(pos_to_check, relative_to)
+            pos_to_check = scene.target_workspace_check.get_position()
+        if not scene.check_target_in_workspace(pos_to_check):
+            raise InvalidActionError('A path could not be found because the '
+                                     'target is outside of workspace.')
+
     def action(self, scene: Scene, action: np.ndarray):
         assert_action_shape(action, (7,))
         assert_unit_quaternion(action[3:])
         if not self._absolute_mode and self._frame != RelativeFrame.EE:
             action = calculate_delta_pose(scene.robot, action)
         relative_to = None if self._frame == RelativeFrame.WORLD else scene.robot.arm.get_tip()
+        self._quick_boundary_check(scene, action)
 
         try:
             joint_positions = scene.robot.arm.solve_ik_via_jacobian(
