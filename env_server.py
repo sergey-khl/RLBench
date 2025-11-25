@@ -1,3 +1,4 @@
+from pyrep.objects import Joint
 import zmq
 import gymnasium as gym
 import numpy as np
@@ -19,6 +20,22 @@ def signal_handler(sig, frame):
     print("\ninterrupt!")
     running = False
 
+def getTaskData(task):
+    task_info = None
+    reward = None
+    for obj, objtype in task._task._initial_objs_in_scene:
+        if obj.get_name() == 'microwave_door': # setup to work with the ReachTarget and CloseMicrowave tasks
+            microwave_joint = Joint('microwave_door_joint')
+            reward = -microwave_joint.get_joint_position() # in degrees. the more closed the higher the reward
+            task_info = obj.get_pose()
+        elif obj.get_name() == 'target':
+            reward = task._task.reward() # distance based reward
+            task_info = obj.get_pose()
+
+    if task_info is None or reward is None:
+        raise Exception("data collection only setup to work for reachtarget and closemicrowave tasks")
+
+    return task_info, reward
 
 def run_server():
     context = zmq.Context()
@@ -63,11 +80,9 @@ def run_server():
         if cmd == 'reset':
             obs = task.reset()[1]
 
+            task_info, _ = getTaskData(task)
 
-            graspable_objects = task._task.get_graspable_objects()
-            umbrella_obj = graspable_objects[0]
-
-            curr_obs_data = np.concatenate([obs.gripper_pose, umbrella_obj.get_pose()])
+            curr_obs_data = np.concatenate([obs.gripper_pose, task_info])
 
             stats = {
                     'episode': {
@@ -84,15 +99,15 @@ def run_server():
             # normalize the quaternion
             action[3:7] /= np.linalg.norm(action[3:7])
             try:
-                obs, reward, terminated = task.step(action)
+                obs, _, terminated = task.step(action) # reward from here is not the one we necessarily want to use
 
-                graspable_objects = task._task.get_graspable_objects()
-                umbrella_obj = graspable_objects[0]
+                task_info, reward = getTaskData(task)
 
-                curr_obs_data = np.concatenate([obs.gripper_pose, umbrella_obj.get_pose()])
-            except:
+                curr_obs_data = np.concatenate([obs.gripper_pose, task_info])
+            except Exception as e:
+                print('failed to step', e)
                 # stay in place cus out of bounds or some other problem
-                reward = 0
+                reward = -1 # worst case reward example
                 terminated = False
 
             print(reward)
@@ -100,7 +115,6 @@ def run_server():
             stats['episode']['return'] += reward
             stats['episode']['length'] += 1
 
-            # TODO: fix reward
             socket.send_pyobj((curr_obs_data, reward, terminated, stats))
             
         elif cmd == 'close':

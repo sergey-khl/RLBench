@@ -11,6 +11,7 @@ from rlbench.action_modes.gripper_action_modes import Discrete
 from rlbench.environment import Environment
 from rlbench.observation_config import ObservationConfig
 from rlbench.tasks.basketball_in_hoop import BasketballInHoop
+from rlbench.tasks.close_microwave import CloseMicrowave
 from rlbench.tasks.take_umbrella_out_of_umbrella_stand import TakeUmbrellaOutOfUmbrellaStand
 import h5py
 
@@ -22,7 +23,7 @@ env = Environment(
     action_mode, '', obs_config, False)
 env.launch()
 
-task = env.get_task(TakeUmbrellaOutOfUmbrellaStand)
+task = env.get_task(CloseMicrowave)
 
 def load_h5py_to_dict(filename):
     loaded_data = {}
@@ -35,14 +36,13 @@ def load_h5py_to_dict(filename):
     return loaded_data
 
 # dataset = np.load("umbrella_data.npy", allow_pickle=True).item()
-dataset = load_h5py_to_dict("umbrella_data.h5")
-print(dataset)
+dataset = load_h5py_to_dict("microwave_data.h5")
+print(np.sum(dataset['terminals']))
 
 # Reset to initialize the episode
 descriptions, obs = task.reset()
 
 for i, act in enumerate(dataset['actions']):
-    print(act)
     obs, reward, terminated = task.step(act)
 
     if dataset['terminals'][i]:

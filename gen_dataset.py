@@ -17,7 +17,7 @@ from pyrep.objects.shape import Shape
 
 
 # CHANGE ME !!!!!
-task_name = "box" # one of box or reach
+task_name = "microwave" # one of microwave or reach
 
 obs_config = ObservationConfig()
 obs_config.set_all(True)
@@ -28,9 +28,9 @@ env = Environment(
 env.launch()
 
 
-if task_name == "box":
+if task_name == "microwave":
     task = env.get_task(CloseMicrowave)
-    h5_filename = 'box_data.h5'
+    h5_filename = 'microwave_data.h5'
 elif task_name == "reach":
     task = env.get_task(ReachTarget)
     h5_filename = 'reach_data.h5'
@@ -187,7 +187,7 @@ action_shape = action_mode.action_shape(task._scene) # size 8 for 7dof joints an
 initH5pyFile(obs_shape, action_shape)
 
 # collect data
-demos = task.get_demos(num_episodes, live_demos=True, callable_each_step=collectData, gaussian=0.01)
+demos = task.get_demos(num_episodes, live_demos=True, callable_each_step=collectData, gaussian=0.005)
 
 if h5_file_handle:
     h5_file_handle.close()
