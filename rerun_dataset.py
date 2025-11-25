@@ -12,6 +12,7 @@ from rlbench.environment import Environment
 from rlbench.observation_config import ObservationConfig
 from rlbench.tasks.basketball_in_hoop import BasketballInHoop
 from rlbench.tasks.take_umbrella_out_of_umbrella_stand import TakeUmbrellaOutOfUmbrellaStand
+import h5py
 
 obs_config = ObservationConfig()
 obs_config.set_all(True)
@@ -21,22 +22,33 @@ env = Environment(
     action_mode, '', obs_config, False)
 env.launch()
 
-task = env.get_task(ReachTarget)
+task = env.get_task(TakeUmbrellaOutOfUmbrellaStand)
 
-dataset = np.load("reach_data.npy", allow_pickle=True).item()
+def load_h5py_to_dict(filename):
+    loaded_data = {}
+    
+    with h5py.File(filename, 'r') as f:
+        for key, value in f.items():
+            print(key, value)
+            loaded_data[key] = np.array(value)
+            
+    return loaded_data
+
+# dataset = np.load("umbrella_data.npy", allow_pickle=True).item()
+dataset = load_h5py_to_dict("umbrella_data.h5")
+print(dataset)
 
 # Reset to initialize the episode
 descriptions, obs = task.reset()
 
 for i, act in enumerate(dataset['actions']):
-    # act = np.array([-0.2, 0.6, 1.6, 0, 0, 0, 1, 1])
-    # Step the environment with the RECORDED action
-    # If the logic is correct, the robot should follow the exact path of the demo
+    print(act)
     obs, reward, terminated = task.step(act)
 
-    if terminated:
+    if dataset['terminals'][i]:
+        task.reset()
         print(f"Episode finished at step {i}")
-        break
 
 
 print('Done')
+env.shutdown()

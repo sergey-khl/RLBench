@@ -5,8 +5,11 @@ import rlbench
 from rlbench.action_modes.action_mode import EndEffectorActionMode
 from rlbench.environment import Environment
 from rlbench.observation_config import ObservationConfig
+from rlbench.tasks.basketball_in_hoop import BasketballInHoop
 from rlbench.tasks.reach_target import ReachTarget
 from pyquaternion import Quaternion
+
+from rlbench.tasks.take_umbrella_out_of_umbrella_stand import TakeUmbrellaOutOfUmbrellaStand
 
 def run_server():
     context = zmq.Context()
@@ -23,7 +26,7 @@ def run_server():
         action_mode, '', obs_config, False)
     env.launch()
 
-    task = env.get_task(ReachTarget)
+    task = env.get_task(TakeUmbrellaOutOfUmbrellaStand)
 
     socket.setsockopt(zmq.RCVTIMEO, 100)
 
@@ -50,9 +53,11 @@ def run_server():
             if cmd == 'reset':
                 obs = task.reset()[1]
 
-                target_pos = obs.task_low_dim_state
 
-                curr_obs_data = np.concatenate([obs.gripper_pose, target_pos])
+                graspable_objects = task._task.get_graspable_objects()
+                umbrella_obj = graspable_objects[0]
+
+                curr_obs_data = np.concatenate([obs.gripper_pose, umbrella_obj.get_pose()])
 
                 stats = {
                         'episode': {
@@ -71,20 +76,21 @@ def run_server():
                 try:
                     obs, reward, terminated = task.step(action)
 
-                    target_pos = obs.task_low_dim_state
+                    graspable_objects = task._task.get_graspable_objects()
+                    umbrella_obj = graspable_objects[0]
 
-                    curr_obs_data = np.concatenate([obs.gripper_pose, target_pos])
+                    curr_obs_data = np.concatenate([obs.gripper_pose, umbrella_obj.get_pose()])
                 except:
                     # stay in place cus out of bounds or some other problem
+                    reward = 0
                     terminated = False
 
-                distance = np.linalg.norm(curr_obs_data[7:] - curr_obs_data[:3])
-                reward = -distance
+                print(reward)
                     
-                stats['episode']['return'] = reward
+                stats['episode']['return'] += reward
                 stats['episode']['length'] += 1
-                print(stats)
 
+                # TODO: fix reward
                 socket.send_pyobj((curr_obs_data, reward, terminated, stats))
                 
             elif cmd == 'close':
@@ -95,7 +101,7 @@ def run_server():
             elif cmd == 'set_space':
                 action_low, action_high = action_mode.action_bounds()
                 action_shape = action_mode.action_shape(task._scene)
-                obs_shape = np.array([10])
+                obs_shape = np.array([14])
                 socket.send_pyobj({
                     "observation_space": {
                         'low': np.full(obs_shape, -np.inf, dtype=np.float32),
