@@ -1,5 +1,5 @@
 cffi==1.17.1+computecanada
-pyzmq-26.2.1+computecanada
+pyzmq==26.2.1+computecanada
 cloudpickle==3.1.2+computecanada
 Farama_Notifications==0.0.4+computecanada
 gymnasium==1.2.2
