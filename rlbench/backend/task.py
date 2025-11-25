@@ -368,7 +368,7 @@ class Task(object):
         arm.set_joint_positions(start_vals)
         return True, -1
 
-    def _get_waypoints(self, validating=False) -> List[Waypoint]:
+    def _get_waypoints(self, validating=False, gaussian=None) -> List[Waypoint]:
         waypoint_name = 'waypoint%d'
         waypoints = []
         additional_waypoint_inits = []

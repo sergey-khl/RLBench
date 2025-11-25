@@ -322,7 +322,8 @@ class Scene(object):
 
     def get_demo(self, record: bool = True,
                  callable_each_step: Callable[[Observation], None] = None,
-                 randomly_place: bool = True) -> Demo:
+                 randomly_place: bool = True,
+                 gaussian=None) -> Demo:
         """Returns a demo (list of observations)"""
 
         if not self._has_init_task:
@@ -356,7 +357,7 @@ class Scene(object):
                                     and self.robot.arm.check_arm_collision(s)]
                 [s.set_collidable(False) for s in colliding_shapes]
                 try:
-                    path = point.get_path()
+                    path = point.get_path(gaussian=gaussian)
                     [s.set_collidable(True) for s in colliding_shapes]
                 except ConfigurationPathError as e:
                     [s.set_collidable(True) for s in colliding_shapes]

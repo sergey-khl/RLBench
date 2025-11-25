@@ -3,6 +3,7 @@ from pyrep.objects.object import Object
 from pyrep.robots.configuration_paths.arm_configuration_path import (
     ArmConfigurationPath)
 from rlbench.backend.robot import Robot
+import numpy as np
 
 
 class Waypoint(object):
@@ -21,7 +22,7 @@ class Waypoint(object):
             self._ignore_collisions = 'ignore_collision' in self._ext
             self._linear_only = 'linear' in self._ext
 
-    def get_path(self, ignore_collisions=False) -> ArmConfigurationPath:
+    def get_path(self, ignore_collisions=False, gaussian=None) -> ArmConfigurationPath:
         raise NotImplementedError()
 
     def get_ext(self) -> str:
@@ -44,7 +45,8 @@ class Waypoint(object):
 
 class Point(Waypoint):
 
-    def get_path(self, ignore_collisions=False) -> ArmConfigurationPath:
+    # gaussian is the variance. bigger number = more random path
+    def get_path(self, ignore_collisions=False, gaussian=None) -> ArmConfigurationPath:
         arm = self._robot.arm
         if self._linear_only:
             path = arm.get_linear_path(self._waypoint.get_position(),
@@ -60,12 +62,19 @@ class Point(Waypoint):
                                 max_configs=10,
                                 trials_per_goal=10,
                                 algorithm=Algos.RRTConnect)
+
+        # add some human-like addition to the movement
+        if gaussian is not None:
+            gaussian_noise = np.random.normal(loc=0, scale=gaussian, size=path._path_points.shape)
+            path._path_points += gaussian_noise
+
         return path
 
 
 class PredefinedPath(Waypoint):
 
-    def get_path(self, ignore_collisions=False) -> ArmConfigurationPath:
+    # TODO: nothing done with gaussian variable here
+    def get_path(self, ignore_collisions=False, gaussian=None) -> ArmConfigurationPath:
         arm = self._robot.arm
         path = arm.get_path_from_cartesian_path(self._waypoint)
         return path

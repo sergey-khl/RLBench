@@ -331,7 +331,6 @@ class EndEffectorPoseViaIK(ArmActionMode):
         self._quick_boundary_check(scene, action)
 
         try:
-            print(action[:3])
             joint_positions = scene.robot.arm.solve_ik_via_jacobian(
                 action[:3], quaternion=action[3:], relative_to=relative_to)
             scene.robot.arm.set_joint_target_positions(joint_positions)

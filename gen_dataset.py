@@ -47,8 +47,16 @@ written_episodes = 0
 prev_obs = None
 current_episode_data = []
 
+marker_size = 0.1
+marker = Shape.create(
+    type=PrimitiveShape.SPHERE,
+    size=[marker_size, marker_size, marker_size],
+    color=[0.0, 0.0, 1.0],
+    respondable=False 
+)
+
 def collectData(curr_obs):
-    global prev_obs, current_episode_data
+    global prev_obs, current_episode_data, marker
 
     # keep track of previous observation so we can find action from it 
     success, terminated = task._task.success()
@@ -169,7 +177,6 @@ def initH5pyFile(obs_shape, action_shape):
             dtype=dtype_map[key], compression="gzip", compression_opts=4
         )
         h5_datasets[key] = dset
-        print(f"Initialized HDF5 dataset: {key}")
 
 
 
@@ -180,7 +187,7 @@ action_shape = action_mode.action_shape(task._scene) # size 8 for 7dof joints an
 initH5pyFile(obs_shape, action_shape)
 
 # collect data
-demos = task.get_demos(num_episodes, live_demos=True, callable_each_step=collectData)
+demos = task.get_demos(num_episodes, live_demos=True, callable_each_step=collectData, gaussian=0.01)
 
 if h5_file_handle:
     h5_file_handle.close()
