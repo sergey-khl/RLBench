@@ -14,5 +14,5 @@ pylocker==3.1.0
 pyquaternion==0.9.9
 PyRep @ git+https://github.com/stepjam/PyRep.git
 rlbench @ git+https://github.com/stepjam/RLBench.git
-scipy==1.16.2+computecanada
+scipy==1.15.1+computecanada
 typing_extensions==4.15.0+computecanada
