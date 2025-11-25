@@ -74,7 +74,7 @@ def collectData(curr_obs):
             reward = -microwave_joint.get_joint_position() # in degrees. the more closed the higher the reward
             task_info = obj.get_pose()
         elif obj.get_name() == 'target':
-            reward = task._task.reward()
+            reward = task._task.reward() # distance based reward
             task_info = obj.get_pose()
 
     if task_info is None or reward is None:
