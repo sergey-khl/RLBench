@@ -10,6 +10,11 @@ from rlbench.tasks.basketball_in_hoop import BasketballInHoop
 from rlbench.tasks.close_microwave import CloseMicrowave
 from rlbench.tasks.reach_target import ReachTarget
 from pyquaternion import Quaternion
+from absl import app, flags
+
+FLAGS = flags.FLAGS
+
+flags.DEFINE_integer("port", 5000, "port for communicating with iql repo")
 
 import signal
 
@@ -40,7 +45,7 @@ def getTaskData(task):
 def run_server():
     context = zmq.Context()
     socket = context.socket(zmq.PAIR)
-    socket.bind("tcp://*:5555")
+    socket.bind(f"tcp://*:{FLAGS.port}")
 
     print("RLBench Server running... waiting for IQL client.")
 
@@ -143,4 +148,4 @@ def run_server():
 
 
 if __name__ == "__main__":
-    run_server()
+    app.run(run_server)
