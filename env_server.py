@@ -49,7 +49,7 @@ def run_server():
 
     action_mode = EndEffectorActionMode()
     env = Environment(
-        action_mode, '', obs_config, headless=True)
+        action_mode, '', obs_config, headless=False)
     env.launch()
 
     task = env.get_task(CloseMicrowave)
