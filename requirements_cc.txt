@@ -12,7 +12,7 @@ pybind11==3.0.1
 pycparser==2.23+computecanada
 pylocker==3.1.0
 pyquaternion==0.9.9
-PyRep @ git+https://github.com/stepjam/PyRep.git@8f420be8064b1970aae18a9cfbc978dfb15747ef
+PyRep @ git+https://github.com/stepjam/PyRep.git
 rlbench @ git+https://github.com/stepjam/RLBench.git
 scipy==1.16.2+computecanada
 typing_extensions==4.15.0+computecanada
