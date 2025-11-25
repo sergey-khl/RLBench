@@ -5,7 +5,7 @@ Farama_Notifications==0.0.4+computecanada
 gymnasium==1.2.2
 loguru==0.7.3+computecanada
 natsort==8.4.0
-numpy==2.3.3+computecanada
+numpy==2.2.2+computecanada
 pillow==11.1.0+computecanada
 psutil==7.0.0+computecanada
 pybind11==3.0.1
