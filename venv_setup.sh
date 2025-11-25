@@ -10,6 +10,6 @@ python -m venv .venv_rlbench
 source .venv_rlbench/bin/activate
 pip install -r requirements_cc.txt
 
-tar -cavf venv_rlbench.tar .venv_rlbench
+tar -caf venv_rlbench.tar .venv_rlbench
 
 pip freeze
