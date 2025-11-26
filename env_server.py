@@ -103,6 +103,8 @@ def run_server(_):
         elif cmd == 'step':
             action = message['action']
 
+            before_step = time.time()
+
             # normalize the quaternion
             action[3:7] /= np.linalg.norm(action[3:7])
             try:
@@ -117,10 +119,13 @@ def run_server(_):
                 reward = -1 # worst case reward example
                 terminated = False
 
-            print(reward)
+            # print(reward)
                 
             stats['episode']['return'] += reward
             stats['episode']['length'] += 1
+
+            after_step = time.time()
+            print(after_step-before_step)
 
             socket.send_pyobj((curr_obs_data, reward, terminated, stats))
             
@@ -132,8 +137,6 @@ def run_server(_):
             sent_stamp = message['stamp']
             recieved = time.time()
             diff = recieved - sent_stamp
-            print(diff)
-
             socket.send_pyobj(diff)
             break
 
