@@ -42,7 +42,7 @@ def getTaskData(task):
 
     return task_info, reward
 
-def run_server():
+def run_server(_):
     context = zmq.Context()
     socket = context.socket(zmq.PAIR)
     socket.bind(f"tcp://*:{FLAGS.port}")
