@@ -51,7 +51,8 @@ def run_server(_):
     print("RLBench Server running... waiting for IQL client.")
 
     obs_config = ObservationConfig()
-    obs_config.set_all(True)
+    obs_config.set_all_low_dim(True)
+    obs_config.set_all_high_dim(False)
 
     action_mode = EndEffectorActionMode()
     env = Environment(
