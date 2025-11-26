@@ -45,6 +45,7 @@ def getTaskData(task):
 def run_server(_):
     context = zmq.Context()
     socket = context.socket(zmq.PAIR)
+    print(f"tcp://*:{FLAGS.port}")
     socket.bind(f"tcp://*:{FLAGS.port}")
 
     print("RLBench Server running... waiting for IQL client.")
