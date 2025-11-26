@@ -1,4 +1,5 @@
 from pyrep.objects import Joint
+from pyrep.pyrep import time
 import zmq
 import gymnasium as gym
 import numpy as np
@@ -45,7 +46,6 @@ def getTaskData(task):
 def run_server(_):
     context = zmq.Context()
     socket = context.socket(zmq.PAIR)
-    print(f"tcp://*:{FLAGS.port}")
     socket.bind(f"tcp://*:{FLAGS.port}")
 
     print("RLBench Server running... waiting for IQL client.")
@@ -82,6 +82,7 @@ def run_server(_):
             # check every 100ms
             continue
         cmd = message['cmd']
+        print(cmd)
 
         if cmd == 'reset':
             obs = task.reset()[1]
@@ -125,6 +126,15 @@ def run_server(_):
             
         elif cmd == 'close':
             running = False
+            break
+
+        elif cmd == 'time':
+            sent_stamp = message['stamp']
+            recieved = time.time()
+            diff = recieved - sent_stamp
+            print(diff)
+
+            socket.send_pyobj(diff)
             break
 
         elif cmd == 'set_space':
