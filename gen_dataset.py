@@ -17,7 +17,7 @@ from pyrep.objects.shape import Shape
 
 
 # CHANGE ME !!!!!
-task_name = "microwave" # one of microwave or reach
+task_name = "reach" # one of microwave or reach
 
 obs_config = ObservationConfig()
 obs_config.set_all(True)
