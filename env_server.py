@@ -102,14 +102,14 @@ def run_server(_):
             print(f"\n\n\n\n\nRESETTTTING{reset_count}\n\n\n\n\n\n")
             if reset_count % gc_episode == 0:
                 print(f"Maintenance time for reset {reset_count}")
-                # env.shutdown()
-                #
-                # del task
-                # del env
-                # del action_mode
-                # gc.collect() 
-                #
-                # env, task, action_mode = createEnvAndTask()
+                env.shutdown()
+
+                del task
+                del env
+                del action_mode
+                gc.collect() 
+
+                env, task, action_mode = createEnvAndTask()
 
             obs = task.reset()[1]
 
